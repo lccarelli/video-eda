@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:videoeda:schema:video-published",
+  "title": "VideoPublished",
+  "description": "El video terminó de procesarse y quedó publicado. Es el pivote de la saga de publicación (nota 08).",
+  "allOf": [
+    { "$ref": "urn:videoeda:schema:cloudevent-envelope" },
+    {
+      "properties": {
+        "type": { "const": "dev.videoeda.videos.video-published" },
+        "source": { "const": "/videos" },
+        "data": {
+          "type": "object",
+          "required": ["videoId", "creatorId", "title", "durationSeconds", "publishedAt"],
+          "properties": {
+            "videoId": { "type": "string", "pattern": "^vid_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+            "creatorId": { "type": "string", "pattern": "^usr_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+            "title": { "type": "string", "minLength": 1 },
+            "durationSeconds": { "type": "integer", "minimum": 1 },
+            "publishedAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:videoeda:schema:cloudevent-envelope",
+  "title": "Envelope CloudEvents de video-eda (modo structured)",
+  "description": "Atributos de contexto comunes a todos los eventos. `data` lo define cada evento. Sin additionalProperties: false a propósito (lector tolerante).",
+  "type": "object",
+  "required": ["specversion", "id", "source", "type", "subject", "time", "datacontenttype", "sequence", "data"],
+  "properties": {
+    "specversion": { "const": "1.0" },
+    "id": {
+      "type": "string",
+      "pattern": "^evt_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Identificador del evento: evt_<UUIDv7>. source + id es único y es la clave de deduplicación del consumer. Se mantiene en reenvíos (nota 17)."
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Contexto productor, por ejemplo /videos."
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^dev\\.videoeda\\.[a-z]+\\.[a-z]+(-[a-z]+)*(\\.v[2-9][0-9]*)?$",
+      "description": "dev.videoeda.<contexto>.<evento>; sin sufijo hasta el primer cambio incompatible, luego .v2, .v3."
+    },
+    "subject": {
+      "type": "string",
+      "pattern": "^((vid|cmt)_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|usr_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:usr_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$",
+      "description": "Id del agregado, sin tipo adicional (R10, nota 17): vid_<UUIDv7>, cmt_<UUIDv7> o el id compuesto usr_<UUIDv7>:usr_<UUIDv7> de un Follow (followerId:creatorId)."
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Momento en que ocurrió el hecho (RFC 3339)."
+    },
+    "datacontenttype": { "const": "application/json" },
+    "dataschema": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI del schema de data. Cambia ante un cambio compatible; el tipo cambia ante uno incompatible."
+    },
+    "correlationid": {
+      "type": "string",
+      "pattern": "^cor_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Extensión: cor_<UUIDv7>. Agrupa los eventos de una saga o de un request."
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Extensión: ordinal del evento dentro del stream publicado de ese agregado en ese topic (1, 2, 3…), sin huecos; permite descartar repetidos y viejos y apartar huecos (ADR 0011)."
+    },
+    "data": { "type": "object" }
+  }
+}

@@ -1,0 +1,104 @@
+asyncapi: 3.1.0
+info:
+  title: Feed
+  version: 0.1.0
+  description: >
+    Eventos que publica el contexto Feed. Contrato de productor.
+    Solo se publican los seguimientos, porque Notifications los consume para
+    mantener su propia lista de seguidores. Las entradas del feed no se
+    publican; ver README.
+defaultContentType: application/cloudevents+json
+
+channels:
+  feedFollow:
+    address: feed.follow
+    description: >
+      Seguimientos entre un viewer y un creator. Key = followerId:creatorId
+      (id del agregado Follow), para que CreatorFollowed y CreatorUnfollowed
+      del mismo par conserven el orden. Retención infinita para que
+      Notifications pueda reconstruir su lista de seguidores.
+    messages:
+      CreatorFollowed:
+        $ref: '#/components/messages/CreatorFollowed'
+      CreatorUnfollowed:
+        $ref: '#/components/messages/CreatorUnfollowed'
+    bindings:
+      kafka:
+        partitions: 3
+        replicas: 1
+        topicConfiguration:
+          retention.ms: -1
+        bindingVersion: 0.5.0
+
+operations:
+  publishCreatorFollowed:
+    action: send
+    channel:
+      $ref: '#/channels/feedFollow'
+    messages:
+      - $ref: '#/channels/feedFollow/messages/CreatorFollowed'
+  publishCreatorUnfollowed:
+    action: send
+    channel:
+      $ref: '#/channels/feedFollow'
+    messages:
+      - $ref: '#/channels/feedFollow/messages/CreatorUnfollowed'
+
+components:
+  messages:
+    CreatorFollowed:
+      name: CreatorFollowed
+      title: Creator seguido
+      summary: Un viewer empezó a seguir a un creator.
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '../schemas/creator-followed.json'
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: followerId:creatorId, ambos usr_<UUIDv7> separados por ':' (nota 17)
+          bindingVersion: 0.5.0
+      examples:
+        - name: creatorSeguido
+          payload:
+            specversion: '1.0'
+            id: evt_01a13161-1330-7b55-9cdc-2b8ca7329fec
+            source: /feed
+            type: dev.videoeda.feed.creator-followed
+            subject: usr_01a13161-112a-7681-b280-02ac0205cd15:usr_01a13161-11be-7119-8e3e-bf07f13eb833
+            time: '2026-10-12T21:00:00Z'
+            datacontenttype: application/json
+            sequence: 1
+            data:
+              followerId: usr_01a13161-112a-7681-b280-02ac0205cd15
+              creatorId: usr_01a13161-11be-7119-8e3e-bf07f13eb833
+              followedAt: '2026-10-12T20:59:59Z'
+    CreatorUnfollowed:
+      name: CreatorUnfollowed
+      title: Creator dejado de seguir
+      summary: Un viewer dejó de seguir a un creator.
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '../schemas/creator-unfollowed.json'
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: followerId:creatorId, ambos usr_<UUIDv7> separados por ':' (nota 17)
+          bindingVersion: 0.5.0
+      examples:
+        - name: creatorDejadoDeSeguir
+          payload:
+            specversion: '1.0'
+            id: evt_01a13161-18f8-7ec3-ba62-5b9d7218d06e
+            source: /feed
+            type: dev.videoeda.feed.creator-unfollowed
+            subject: usr_01a13161-112a-7681-b280-02ac0205cd15:usr_01a13161-11be-7119-8e3e-bf07f13eb833
+            time: '2026-10-12T21:10:00Z'
+            datacontenttype: application/json
+            sequence: 2
+            data:
+              followerId: usr_01a13161-112a-7681-b280-02ac0205cd15
+              creatorId: usr_01a13161-11be-7119-8e3e-bf07f13eb833
+              unfollowedAt: '2026-10-12T21:09:59Z'

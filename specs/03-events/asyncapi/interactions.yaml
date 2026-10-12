@@ -1,0 +1,138 @@
+asyncapi: 3.1.0
+info:
+  title: Interactions
+  version: 0.1.0
+  description: >
+    Eventos que publica el contexto Interactions. Contrato de productor.
+    Solo se publican los eventos que otro contexto consume (hoy, Notifications
+    consume los de comentario). Puntuaciones y vistas son internas; ver README.
+defaultContentType: application/cloudevents+json
+
+channels:
+  interactionsComment:
+    address: interactions.comment
+    description: >
+      Hechos del ciclo de vida de un comentario. Key = commentId, para que
+      CommentPosted, CommentEdited y CommentDeleted conserven el orden.
+    messages:
+      CommentPosted:
+        $ref: '#/components/messages/CommentPosted'
+      CommentEdited:
+        $ref: '#/components/messages/CommentEdited'
+      CommentDeleted:
+        $ref: '#/components/messages/CommentDeleted'
+    bindings:
+      kafka:
+        partitions: 3
+        replicas: 1
+        bindingVersion: 0.5.0
+
+operations:
+  publishCommentPosted:
+    action: send
+    channel:
+      $ref: '#/channels/interactionsComment'
+    messages:
+      - $ref: '#/channels/interactionsComment/messages/CommentPosted'
+  publishCommentEdited:
+    action: send
+    channel:
+      $ref: '#/channels/interactionsComment'
+    messages:
+      - $ref: '#/channels/interactionsComment/messages/CommentEdited'
+  publishCommentDeleted:
+    action: send
+    channel:
+      $ref: '#/channels/interactionsComment'
+    messages:
+      - $ref: '#/channels/interactionsComment/messages/CommentDeleted'
+
+components:
+  messages:
+    CommentPosted:
+      name: CommentPosted
+      title: Comentario publicado
+      summary: Un viewer comentó un video.
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '../schemas/comment-posted.json'
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: commentId, con formato cmt_<UUIDv7> (nota 17)
+          bindingVersion: 0.5.0
+      examples:
+        - name: comentarioPublicado
+          payload:
+            specversion: '1.0'
+            id: evt_01a13161-130b-746b-a4cf-411498498e7c
+            source: /interactions
+            type: dev.videoeda.interactions.comment-posted
+            subject: cmt_01a13161-129c-76ff-af15-e5821d573d09
+            time: '2026-10-12T20:00:00Z'
+            datacontenttype: application/json
+            sequence: 1
+            data:
+              commentId: cmt_01a13161-129c-76ff-af15-e5821d573d09
+              videoId: vid_01a13161-1277-7e7b-9435-b109a7e95989
+              authorId: usr_01a13161-112a-7681-b280-02ac0205cd15
+              text: Muy bueno el video
+              postedAt: '2026-10-12T19:59:59Z'
+    CommentEdited:
+      name: CommentEdited
+      title: Comentario editado
+      summary: El autor editó su comentario.
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '../schemas/comment-edited.json'
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: commentId, con formato cmt_<UUIDv7> (nota 17)
+          bindingVersion: 0.5.0
+      examples:
+        - name: comentarioEditado
+          payload:
+            specversion: '1.0'
+            id: evt_01a13161-18ae-7451-9583-60a5d4d49510
+            source: /interactions
+            type: dev.videoeda.interactions.comment-edited
+            subject: cmt_01a13161-129c-76ff-af15-e5821d573d09
+            time: '2026-10-12T20:05:00Z'
+            datacontenttype: application/json
+            sequence: 2
+            data:
+              commentId: cmt_01a13161-129c-76ff-af15-e5821d573d09
+              videoId: vid_01a13161-1277-7e7b-9435-b109a7e95989
+              text: Muy bueno el video, gracias
+              editedAt: '2026-10-12T20:04:59Z'
+    CommentDeleted:
+      name: CommentDeleted
+      title: Comentario borrado
+      summary: El autor borró su comentario.
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '../schemas/comment-deleted.json'
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: commentId, con formato cmt_<UUIDv7> (nota 17)
+          bindingVersion: 0.5.0
+      examples:
+        - name: comentarioBorrado
+          payload:
+            specversion: '1.0'
+            id: evt_01a13161-18d3-789a-828e-fd36c097ce13
+            source: /interactions
+            type: dev.videoeda.interactions.comment-deleted
+            subject: cmt_01a13161-129c-76ff-af15-e5821d573d09
+            time: '2026-10-12T20:08:00Z'
+            datacontenttype: application/json
+            sequence: 3
+            data:
+              commentId: cmt_01a13161-129c-76ff-af15-e5821d573d09
+              videoId: vid_01a13161-1277-7e7b-9435-b109a7e95989
+              deletedAt: '2026-10-12T20:07:59Z'

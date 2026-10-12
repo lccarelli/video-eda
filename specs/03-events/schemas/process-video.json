@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:videoeda:schema:process-video",
+  "title": "ProcessVideo",
+  "description": "Trabajo de procesamiento de un video. Cola interna de Videos, consumida por el share group del worker.",
+  "allOf": [
+    { "$ref": "urn:videoeda:schema:cloudevent-envelope" },
+    {
+      "properties": {
+        "type": { "const": "dev.videoeda.videos.process-video" },
+        "source": { "const": "/videos" },
+        "data": {
+          "type": "object",
+          "required": ["videoId", "storageRef", "requestedAt"],
+          "properties": {
+            "videoId": { "type": "string", "pattern": "^vid_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+            "storageRef": { "type": "string", "description": "Referencia al archivo; el contenido nunca viaja por Kafka." },
+            "requestedAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  ]
+}

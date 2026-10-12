@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:videoeda:schema:video-deleted",
+  "title": "VideoDeleted",
+  "description": "El creator borró el video. Interactions, Feed y Notifications reaccionan.",
+  "allOf": [
+    { "$ref": "urn:videoeda:schema:cloudevent-envelope" },
+    {
+      "properties": {
+        "type": { "const": "dev.videoeda.videos.video-deleted" },
+        "source": { "const": "/videos" },
+        "data": {
+          "type": "object",
+          "required": ["videoId", "creatorId", "deletedAt"],
+          "properties": {
+            "videoId": { "type": "string", "pattern": "^vid_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+            "creatorId": { "type": "string", "pattern": "^usr_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+            "deletedAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  ]
+}

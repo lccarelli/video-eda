@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:videoeda:schema:creator-followed",
+  "title": "CreatorFollowed",
+  "description": "Un viewer empezó a seguir a un creator.",
+  "allOf": [
+    { "$ref": "urn:videoeda:schema:cloudevent-envelope" },
+    {
+      "properties": {
+        "type": { "const": "dev.videoeda.feed.creator-followed" },
+        "source": { "const": "/feed" },
+        "data": {
+          "type": "object",
+          "required": ["followerId", "creatorId", "followedAt"],
+          "properties": {
+            "followerId": { "type": "string", "pattern": "^usr_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+            "creatorId": { "type": "string", "pattern": "^usr_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+            "followedAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  ]
+}

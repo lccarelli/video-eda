@@ -1,0 +1,160 @@
+asyncapi: 3.1.0
+info:
+  title: Videos
+  version: 0.1.0
+  description: >
+    Eventos que publica el contexto Videos. Contrato de productor.
+    Un topic por agregado, sin versión en el nombre (ADR 0003); la versión vive
+    en el type del CloudEvent (ADR 0002). Los consumidores y sus expectativas
+    se verifican con Pact (ADR 0006), no se listan acá.
+defaultContentType: application/cloudevents+json
+
+channels:
+  videosVideo:
+    address: videos.video
+    description: Hechos del ciclo de vida de un video. Key = videoId.
+    messages:
+      VideoPublished:
+        $ref: '#/components/messages/VideoPublished'
+      VideoDeleted:
+        $ref: '#/components/messages/VideoDeleted'
+    bindings:
+      kafka:
+        partitions: 3
+        replicas: 1
+        bindingVersion: 0.5.0
+  videosProcessing:
+    address: videos.processing
+    description: >
+      Cola interna de trabajo de procesamiento de video. La produce y la consume
+      Videos; la consume un share group (ADR 0005). Key = videoId.
+    messages:
+      ProcessVideo:
+        $ref: '#/components/messages/ProcessVideo'
+    bindings:
+      kafka:
+        partitions: 3
+        replicas: 1
+        bindingVersion: 0.5.0
+
+operations:
+  publishVideoPublished:
+    action: send
+    channel:
+      $ref: '#/channels/videosVideo'
+    messages:
+      - $ref: '#/channels/videosVideo/messages/VideoPublished'
+  publishVideoDeleted:
+    action: send
+    channel:
+      $ref: '#/channels/videosVideo'
+    messages:
+      - $ref: '#/channels/videosVideo/messages/VideoDeleted'
+  requestVideoProcessing:
+    action: send
+    channel:
+      $ref: '#/channels/videosProcessing'
+    messages:
+      - $ref: '#/channels/videosProcessing/messages/ProcessVideo'
+  processVideo:
+    action: receive
+    channel:
+      $ref: '#/channels/videosProcessing'
+    messages:
+      - $ref: '#/channels/videosProcessing/messages/ProcessVideo'
+    bindings:
+      kafka:
+        groupId:
+          type: string
+          enum: [videos-worker]
+        bindingVersion: 0.5.0
+
+components:
+  messages:
+    VideoPublished:
+      name: VideoPublished
+      title: Video publicado
+      summary: El video terminó de procesarse y quedó publicado (pivote de la saga).
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '../schemas/video-published.json'
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: videoId, con formato vid_<UUIDv7> (nota 17)
+          bindingVersion: 0.5.0
+      examples:
+        - name: videoPublicado
+          payload:
+            specversion: '1.0'
+            id: evt_01a13161-12e6-7e09-b67f-10ca57c43328
+            source: /videos
+            type: dev.videoeda.videos.video-published
+            subject: vid_01a13161-1277-7e7b-9435-b109a7e95989
+            time: '2026-10-12T19:30:00Z'
+            datacontenttype: application/json
+            correlationid: cor_01a13161-13c4-7752-b78c-4c2b8c8039fb
+            sequence: 1
+            data:
+              videoId: vid_01a13161-1277-7e7b-9435-b109a7e95989
+              creatorId: usr_01a13161-11be-7119-8e3e-bf07f13eb833
+              title: Mi primer video
+              durationSeconds: 184
+              publishedAt: '2026-10-12T19:29:58Z'
+    VideoDeleted:
+      name: VideoDeleted
+      title: Video borrado
+      summary: El creator borró el video.
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '../schemas/video-deleted.json'
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: videoId, con formato vid_<UUIDv7> (nota 17)
+          bindingVersion: 0.5.0
+      examples:
+        - name: videoBorrado
+          payload:
+            specversion: '1.0'
+            id: evt_01a13161-1864-73ab-9c84-a5cd7222d728
+            source: /videos
+            type: dev.videoeda.videos.video-deleted
+            subject: vid_01a13161-1277-7e7b-9435-b109a7e95989
+            time: '2026-10-12T20:10:00Z'
+            datacontenttype: application/json
+            sequence: 2
+            data:
+              videoId: vid_01a13161-1277-7e7b-9435-b109a7e95989
+              creatorId: usr_01a13161-11be-7119-8e3e-bf07f13eb833
+              deletedAt: '2026-10-12T20:09:59Z'
+    ProcessVideo:
+      name: ProcessVideo
+      title: Procesar video
+      summary: Trabajo para el worker de procesamiento.
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '../schemas/process-video.json'
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: videoId, con formato vid_<UUIDv7> (nota 17)
+          bindingVersion: 0.5.0
+      examples:
+        - name: procesarVideo
+          payload:
+            specversion: '1.0'
+            id: evt_01a13161-1889-7fde-a4d5-22e45e5c7474
+            source: /videos
+            type: dev.videoeda.videos.process-video
+            subject: vid_01a13161-1277-7e7b-9435-b109a7e95989
+            time: '2026-10-12T19:25:00Z'
+            datacontenttype: application/json
+            sequence: 1
+            data:
+              videoId: vid_01a13161-1277-7e7b-9435-b109a7e95989
+              storageRef: storage://uploads/vid_01a13161-1277-7e7b-9435-b109a7e95989
+              requestedAt: '2026-10-12T19:25:00Z'
