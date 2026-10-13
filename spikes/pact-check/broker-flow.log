@@ -1,0 +1,251 @@
+
+######## 1. Levantar postgres y pact-broker
+ Network pactcheck_default  Creating
+ Network pactcheck_default  Created
+ Volume pactcheck_postgres-data  Creating
+ Volume pactcheck_postgres-data  Created
+ Container pactcheck-postgres  Creating
+ Container pactcheck-postgres  Created
+ Container pactcheck-broker  Creating
+ Container pactcheck-broker  Created
+ Container pactcheck-postgres  Starting
+ Container pactcheck-postgres  Started
+ Container pactcheck-postgres  Waiting
+ Container pactcheck-postgres  Healthy
+ Container pactcheck-broker  Starting
+ Container pactcheck-broker  Started
+ Container pactcheck-postgres  Waiting
+ Container pactcheck-broker  Waiting
+ Container pactcheck-postgres  Healthy
+ Container pactcheck-broker  Healthy
+{"ok":true,"_links":{"self":{"href":"http://localhost:9292/diagnostic/status/heartbeat"}}}
+
+######## 2. Consumers generan pacts (./gradlew clean test)
+feed-videos.json
+notifications-videos.json
+zero-consumer-videos-zero.json
+
+######## 3. Crear environment production y publicar pacts de feed y notifications v1.0.0
+Unable to find image 'pactfoundation/pact-cli:1.5.0.5' locally
+1.5.0.5: Pulling from pactfoundation/pact-cli
+Digest: sha256:77b98079e5be279353f61e116a0b9b3af19e55b215532b30d430ff5df66e5ac9
+Status: Downloaded newer image for pactfoundation/pact-cli:1.5.0.5
+Error making request to http://localhost:9292/environments status=400 {"errors":{"name":["name 'production' is already used by an existing environment."]}}
+Created feed version 1.0.0 with branch main
+Pact successfully published for feed version 1.0.0 and provider videos.
+  View the published pact at http://localhost:9292/pacts/provider/videos/consumer/feed/version/1.0.0
+  Events detected: contract_published, contract_content_changed (first time untagged pact published)
+  Next steps:
+    * Add Pact verification tests to the videos build. See https://docs.pact.io/go/provider_verification
+    * Configure separate videos pact verification build and webhook to trigger it when the pact content changes. See https://docs.pact.io/go/webhooks
+Created notifications version 1.0.0 with branch main
+Pact successfully published for notifications version 1.0.0 and provider videos.
+  View the published pact at http://localhost:9292/pacts/provider/videos/consumer/notifications/version/1.0.0
+  Events detected: contract_published, contract_content_changed (first time untagged pact published)
+  Next steps:
+    * Add Pact verification tests to the videos build. See https://docs.pact.io/go/provider_verification
+    * Configure separate videos pact verification build and webhook to trigger it when the pact content changes. See https://docs.pact.io/go/webhooks
+Recorded deployment of feed version 1.0.0 to production environment in the Pact Broker.
+Recorded deployment of notifications version 1.0.0 to production environment in the Pact Broker.
+
+######## 4. CTR-01 camino verde: videos 1.0.0 verifica y can-i-deploy
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between feed (1.0.0) and videos - VideoPublished STANDARD_OUT
+    Verifying a pact between feed (1.0.0) and videos
+      VideoPublished
+      Test Name: spike.FeedConsumerPactTest.CTR-01 feed procesa VideoPublished con creatorId(List)
+          has a matching body (OK)
+    23:55:16.604 [Test worker] INFO au.com.dius.pact.provider.DefaultVerificationReporter -- Published verification result of 'Ok(interactionIds=[72041672a5680386edde6f10e0dea903650de0b6])' for consumer 'Consumer(name=fe
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between feed (1.0.0) and videos - VideoPublished PASSED
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between notifications (1.0.0) and videos - VideoPublished STANDARD_OUT
+    Verifying a pact between notifications (1.0.0) and videos
+      VideoPublished
+      Test Name: spike.NotificationsConsumerPactTest.CTR-01 notifications procesa VideoPublished con title(List)
+          has a matching body (OK)
+    23:55:17.508 [Test worker] INFO au.com.dius.pact.provider.DefaultVerificationReporter -- Published verification result of 'Ok(interactionIds=[eb29bc646baccca805c7052754905fee54f4fa96])' for consumer 'Consumer(name=no
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between notifications (1.0.0) and videos - VideoPublished PASSED
+BUILD SUCCESSFUL in 8s
+Computer says yes \o/ 
+
+CONSUMER      | C.VERSION | PROVIDER | P.VERSION | SUCCESS? | RESULT#
+--------------|-----------|----------|-----------|----------|--------
+feed          | 1.0.0     | videos   | 1.0.0     | true     | 1      
+notifications | 1.0.0     | videos   | 1.0.0     | true     | 2      
+
+VERIFICATION RESULTS
+--------------------
+1. http://localhost:9292/pacts/provider/videos/consumer/feed/pact-version/6e686f5c44737bc77f776c9c80c08b6b39ec12f7/metadata/Y3ZuPTEuMC4w/verification-results/200 (success)
+2. http://localhost:9292/pacts/provider/videos/consumer/notifications/pact-version/0d2b6c04172e6dc9632685cb7086c27f4ec43262/metadata/Y3ZuPTEuMC4w/verification-results/201 (success)
+
+All required verification results are published and successful
+exit code can-i-deploy videos 1.0.0 = 0
+Recorded deployment of videos version 1.0.0 to production environment in the Pact Broker.
+
+######## 5. CTR-01 camino roto: videos 1.1.0 sin creatorId
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between feed (1.0.0) and videos - VideoPublished STANDARD_OUT
+    Verifying a pact between feed (1.0.0) and videos
+      VideoPublished
+      Test Name: spike.FeedConsumerPactTest.CTR-01 feed procesa VideoPublished con creatorId(List)
+          has a matching body (FAILED)
+    Failures:
+    1) VideoPublished: generates a message which has a matching body
+        1.1) body: $.data Actual map is missing the following keys: creatorId
+    23:55:26.925 [Test worker] INFO au.com.dius.pact.provider.DefaultVerificationReporter -- Published verification result of 'Failed(results=[{attribute=body, description=Actual map is missing the following keys: creato
+    Failures:
+    1) VideoPublished: generates a message which has a matching body
+        1.1) body: $.data Actual map is missing the following keys: creatorId
+    , description=Test method has failed with an exception, interactionDescription=VideoPublished}], description=Body had differences, Test method has failed with an exception: Pact between feed (1.0.0) and videos - Gene
+    Failures:
+    1) VideoPublished: generates a message which has a matching body
+        1.1) body: $.data Actual map is missing the following keys: creatorId
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between feed (1.0.0) and videos - VideoPublished FAILED
+    java.lang.AssertionError: Pact between feed (1.0.0) and videos - Generates message 'VideoPublished'  
+    Failures:
+    1) VideoPublished: generates a message which has a matching body
+        1.1) body: $.data Actual map is missing the following keys: creatorId
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between notifications (1.0.0) and videos - VideoPublished STANDARD_OUT
+    Verifying a pact between notifications (1.0.0) and videos
+      VideoPublished
+      Test Name: spike.NotificationsConsumerPactTest.CTR-01 notifications procesa VideoPublished con title(List)
+          has a matching body (FAILED)
+    Failures:
+    1) VideoPublished: generates a message which has a matching body
+        1.1) body: $.data Actual map is missing the following keys: creatorId
+    23:55:28.095 [Test worker] INFO au.com.dius.pact.provider.DefaultVerificationReporter -- Published verification result of 'Failed(results=[{attribute=body, description=Actual map is missing the following keys: creato
+    Failures:
+    1) VideoPublished: generates a message which has a matching body
+        1.1) body: $.data Actual map is missing the following keys: creatorId
+    , description=Test method has failed with an exception, interactionDescription=VideoPublished}], description=Body had differences, Test method has failed with an exception: Pact between notifications (1.0.0) and vide
+    Failures:
+    1) VideoPublished: generates a message which has a matching body
+        1.1) body: $.data Actual map is missing the following keys: creatorId
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between notifications (1.0.0) and videos - VideoPublished FAILED
+    java.lang.AssertionError: Pact between notifications (1.0.0) and videos - Generates message 'VideoPublished'  
+    Failures:
+    1) VideoPublished: generates a message which has a matching body
+        1.1) body: $.data Actual map is missing the following keys: creatorId
+> Task :providerBrokerVerification FAILED
+BUILD FAILED in 8s
+Computer says no ¯\_(ツ)_/¯
+
+CONSUMER      | C.VERSION | PROVIDER | P.VERSION | SUCCESS? | RESULT#
+--------------|-----------|----------|-----------|----------|--------
+feed          | 1.0.0     | videos   | 1.1.0     | false    | 1      
+notifications | 1.0.0     | videos   | 1.1.0     | false    | 2      
+
+VERIFICATION RESULTS
+--------------------
+1. http://localhost:9292/pacts/provider/videos/consumer/feed/pact-version/6e686f5c44737bc77f776c9c80c08b6b39ec12f7/metadata/Y3ZuPTEuMC4w/verification-results/202 (failure)
+2. http://localhost:9292/pacts/provider/videos/consumer/notifications/pact-version/0d2b6c04172e6dc9632685cb7086c27f4ec43262/metadata/Y3ZuPTEuMC4w/verification-results/203 (failure)
+
+The verification for the pact between the version of feed currently in production (1.0.0) and version 1.1.0 of videos failed
+The verification for the pact between the version of notifications currently in production (1.0.0) and version 1.1.0 of videos failed
+exit code can-i-deploy videos 1.1.0 = 1
+
+######## 6. CTR-02: videos 1.2.0 agrega un campo opcional
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between feed (1.0.0) and videos - VideoPublished STANDARD_OUT
+    Verifying a pact between feed (1.0.0) and videos
+      VideoPublished
+      Test Name: spike.FeedConsumerPactTest.CTR-01 feed procesa VideoPublished con creatorId(List)
+          has a matching body (OK)
+    23:55:35.529 [Test worker] INFO au.com.dius.pact.provider.DefaultVerificationReporter -- Published verification result of 'Ok(interactionIds=[72041672a5680386edde6f10e0dea903650de0b6])' for consumer 'Consumer(name=fe
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between feed (1.0.0) and videos - VideoPublished PASSED
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between notifications (1.0.0) and videos - VideoPublished STANDARD_OUT
+    Verifying a pact between notifications (1.0.0) and videos
+      VideoPublished
+      Test Name: spike.NotificationsConsumerPactTest.CTR-01 notifications procesa VideoPublished con title(List)
+          has a matching body (OK)
+    23:55:36.597 [Test worker] INFO au.com.dius.pact.provider.DefaultVerificationReporter -- Published verification result of 'Ok(interactionIds=[eb29bc646baccca805c7052754905fee54f4fa96])' for consumer 'Consumer(name=no
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between notifications (1.0.0) and videos - VideoPublished PASSED
+BUILD SUCCESSFUL in 7s
+Computer says yes \o/ 
+
+CONSUMER      | C.VERSION | PROVIDER | P.VERSION | SUCCESS? | RESULT#
+--------------|-----------|----------|-----------|----------|--------
+feed          | 1.0.0     | videos   | 1.2.0     | true     | 1      
+notifications | 1.0.0     | videos   | 1.2.0     | true     | 2      
+
+VERIFICATION RESULTS
+--------------------
+1. http://localhost:9292/pacts/provider/videos/consumer/feed/pact-version/6e686f5c44737bc77f776c9c80c08b6b39ec12f7/metadata/Y3ZuPTEuMC4w/verification-results/204 (success)
+2. http://localhost:9292/pacts/provider/videos/consumer/notifications/pact-version/0d2b6c04172e6dc9632685cb7086c27f4ec43262/metadata/Y3ZuPTEuMC4w/verification-results/205 (success)
+
+All required verification results are published and successful
+exit code can-i-deploy videos 1.2.0 = 0
+
+######## 7. CTR-05 vía metadata: videos 1.3.0 usa creatorId como key
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between feed (1.0.0) and videos - VideoPublished STANDARD_OUT
+    Verifying a pact between feed (1.0.0) and videos
+      VideoPublished
+      Test Name: spike.FeedConsumerPactTest.CTR-01 feed procesa VideoPublished con creatorId(List)
+          has a matching body (OK)
+    23:55:43.819 [Test worker] INFO au.com.dius.pact.provider.DefaultVerificationReporter -- Published verification result of 'Ok(interactionIds=[72041672a5680386edde6f10e0dea903650de0b6])' for consumer 'Consumer(name=fe
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between feed (1.0.0) and videos - VideoPublished PASSED
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between notifications (1.0.0) and videos - VideoPublished STANDARD_OUT
+    Verifying a pact between notifications (1.0.0) and videos
+      VideoPublished
+      Test Name: spike.NotificationsConsumerPactTest.CTR-01 notifications procesa VideoPublished con title(List)
+          has a matching body (OK)
+          includes message metadata
+            "kafka_key" with value "usr_01a13161-11be-7119-8e3e-bf07f13eb833" (FAILED)
+    Failures:
+    1) VideoPublished: generates a message which
+        1.1) metadata: Expected 'usr_01a13161-11be-7119-8e3e-bf07f13eb833' to match '^vid_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+    23:55:44.746 [Test worker] INFO au.com.dius.pact.provider.DefaultVerificationReporter -- Published verification result of 'Failed(results=[{attribute=metadata, description=Expected 'usr_01a13161-11be-7119-8e3e-bf07f1
+    Failures:
+    1) VideoPublished: generates a message which
+        1.1) metadata: Expected 'usr_01a13161-11be-7119-8e3e-bf07f13eb833' to match '^vid_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+    , description=Test method has failed with an exception, interactionDescription=VideoPublished}], description=Metadata had differences, Test method has failed with an exception: Pact between notifications (1.0.0) and 
+    Failures:
+    1) VideoPublished: generates a message which
+        1.1) metadata: Expected 'usr_01a13161-11be-7119-8e3e-bf07f13eb833' to match '^vid_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+VideosProviderBrokerVerificationTest > CTR-01 videos cumple los pacts publicados en el broker(PactVerificationContext) > Pact between notifications (1.0.0) and videos - VideoPublished FAILED
+    java.lang.AssertionError: Pact between notifications (1.0.0) and videos - Generates message 'VideoPublished'  
+    Failures:
+    1) VideoPublished: generates a message which
+        1.1) metadata: Expected 'usr_01a13161-11be-7119-8e3e-bf07f13eb833' to match '^vid_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+> Task :providerBrokerVerification FAILED
+BUILD FAILED in 7s
+Computer says no ¯\_(ツ)_/¯
+
+CONSUMER      | C.VERSION | PROVIDER | P.VERSION | SUCCESS? | RESULT#
+--------------|-----------|----------|-----------|----------|--------
+feed          | 1.0.0     | videos   | 1.3.0     | true     | 1      
+notifications | 1.0.0     | videos   | 1.3.0     | false    | 2      
+
+VERIFICATION RESULTS
+--------------------
+1. http://localhost:9292/pacts/provider/videos/consumer/feed/pact-version/6e686f5c44737bc77f776c9c80c08b6b39ec12f7/metadata/Y3ZuPTEuMC4w/verification-results/206 (success)
+2. http://localhost:9292/pacts/provider/videos/consumer/notifications/pact-version/0d2b6c04172e6dc9632685cb7086c27f4ec43262/metadata/Y3ZuPTEuMC4w/verification-results/207 (failure)
+
+The verification for the pact between the version of notifications currently in production (1.0.0) and version 1.3.0 of videos failed
+exit code can-i-deploy videos 1.3.0 = 1
+
+######## 8. Matriz final
+Computer says no ¯\_(ツ)_/¯
+
+CONSUMER      | C.VERSION | PROVIDER | P.VERSION | SUCCESS? | RESULT#
+--------------|-----------|----------|-----------|----------|--------
+feed          | 1.0.0     | videos   | 1.1.0     | false    | 1      
+notifications | 1.0.0     | videos   | 1.1.0     | false    | 2      
+
+VERIFICATION RESULTS
+--------------------
+1. http://localhost:9292/pacts/provider/videos/consumer/feed/pact-version/6e686f5c44737bc77f776c9c80c08b6b39ec12f7/metadata/Y3ZuPTEuMC4w/verification-results/202 (failure)
+2. http://localhost:9292/pacts/provider/videos/consumer/notifications/pact-version/0d2b6c04172e6dc9632685cb7086c27f4ec43262/metadata/Y3ZuPTEuMC4w/verification-results/203 (failure)
+
+The verification for the pact between the version of feed currently in production (1.0.0) and version 1.1.0 of videos failed
+The verification for the pact between the version of notifications currently in production (1.0.0) and version 1.1.0 of videos failed
+
+######## docker compose down -v (proyecto pactcheck)
+ Container pactcheck-broker  Stopping
+ Container pactcheck-broker  Stopped
+ Container pactcheck-broker  Removing
+ Container pactcheck-broker  Removed
+ Container pactcheck-postgres  Stopping
+ Container pactcheck-postgres  Stopped
+ Container pactcheck-postgres  Removing
+ Container pactcheck-postgres  Removed
+ Volume pactcheck_postgres-data  Removing
+ Network pactcheck_default  Removing
+ Volume pactcheck_postgres-data  Removed
+ Network pactcheck_default  Removed

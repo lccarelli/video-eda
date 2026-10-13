@@ -1,0 +1,6 @@
+services:
+  postgres:
+    container_name: pactcheck-postgres
+    ports: !override []
+  pact-broker:
+    container_name: pactcheck-broker
