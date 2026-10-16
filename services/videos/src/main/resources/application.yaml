@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: videos
+  datasource:
+    url: jdbc:postgresql://localhost:5432/videos
+    username: videoeda
+    password: videoeda
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8081
+
+videos:
+  kafka:
+    bootstrap-servers: localhost:9092
+  outbox:
+    poll-interval: 500ms
+  security:
+    issuer: http://localhost:8180/realms/video-eda
+    jwk-set-uri: http://localhost:8180/realms/video-eda/protocol/openid-connect/certs
+    audience: video-eda-api
+  worker:
+    enabled: true
+    group-id: videos-processing-worker
+    max-deliveries: 3
+    keep-alive-interval: 10s
+    processing-time: 2s
+
+logging:
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        name: videos
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
