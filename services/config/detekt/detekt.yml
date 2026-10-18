@@ -1,0 +1,8 @@
+style:
+  MaxLineLength:
+    maxLineLength: 140
+
+complexity:
+  TooManyFunctions:
+    thresholdInClasses: 15
+    ignoreAnnotated: ['Configuration']
