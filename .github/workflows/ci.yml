@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GITLEAKS_IMAGE: ghcr.io/gitleaks/gitleaks:v8.30.1
+  TRIVY_IMAGE: ghcr.io/aquasecurity/trivy:0.76.0
+
+jobs:
+  secrets:
+    name: Secretos (gitleaks)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Buscar secretos en el historial
+        run: docker run --rm -v "$PWD:/repo" -w /repo "$GITLEAKS_IMAGE" git --redact --verbose --config /repo/.gitleaks.toml
+
+  lint:
+    name: Lint (ktlint, detekt, hadolint, ShellCheck, actionlint, zizmor)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: corretto
+          java-version: |
+            25
+            21
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - run: ./deploy/dev/lint.sh
+
+  test:
+    name: Tests y cobertura (./gradlew check)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: corretto
+          java-version: |
+            25
+            21
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - name: ./gradlew check (Testcontainers usa el Docker del runner)
+        working-directory: services
+        run: ./gradlew check
+      - name: Subir reportes
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-test-y-cobertura
+          path: |
+            services/videos/build/reports/tests
+            services/videos/build/reports/jacoco
+          if-no-files-found: warn
+
+  image:
+    name: Imagen (Trivy y SBOM)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Construir la imagen de Videos
+        run: docker build -f services/videos/Dockerfile -t video-eda-videos:ci services
+      - name: Exportar la imagen (así Trivy no necesita el socket de Docker)
+        run: docker save video-eda-videos:ci -o "$RUNNER_TEMP/videos-image.tar"
+      - name: Vulnerabilidades HIGH y CRITICAL con arreglo disponible
+        run: >
+          docker run --rm -v trivy-cache:/root/.cache -v "$RUNNER_TEMP:/work" "$TRIVY_IMAGE"
+          image --input /work/videos-image.tar --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1
+      - name: Configuración (Dockerfile) MEDIUM o peor
+        run: >
+          docker run --rm -v trivy-cache:/root/.cache -v "$PWD:/work" -w /work "$TRIVY_IMAGE"
+          config --severity MEDIUM,HIGH,CRITICAL --skip-dirs spikes --exit-code 1 .
+      - name: SBOM CycloneDX
+        run: >
+          docker run --rm -v trivy-cache:/root/.cache -v "$RUNNER_TEMP:/work" "$TRIVY_IMAGE"
+          image --input /work/videos-image.tar --format cyclonedx --output /work/videos-sbom.cdx.json
+      - name: Subir el SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom-videos
+          path: ${{ runner.temp }}/videos-sbom.cdx.json
+
+  smoke:
+    name: Humo (docker compose up y flujo de punta a punta)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Levantar el ecosistema
+        run: docker compose up --build -d --wait
+      - name: Prueba de humo
+        run: ./deploy/dev/smoke.sh
+      - name: Logs si falló
+        if: ${{ failure() }}
+        run: docker compose logs --no-color --tail=200
+      - name: Apagar
+        if: ${{ always() }}
+        run: docker compose down -v
