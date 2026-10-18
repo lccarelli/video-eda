@@ -1,0 +1,18 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+
+  [[rules.allowlists]]
+  description = "Ids de ejemplo del dominio (<prefijo>_<UUIDv7>, nota 17): identificadores públicos de los ejemplos, no claves"
+  regexTarget = "secret"
+  regexes = ['''^(vid|usr|cmt|evt|cor|ntf)_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$''']
+
+[[rules]]
+id = "curl-auth-user"
+
+  [[rules.allowlists]]
+  description = "admin:admin es la credencial de fábrica y pública de SonarQube; deploy/dev/sonar.sh la usa solo para cambiarla en el primer uso"
+  regexTarget = "secret"
+  regexes = ['''^"?admin:admin"?$''']

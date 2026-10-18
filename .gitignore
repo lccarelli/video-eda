@@ -1,0 +1,14 @@
+.gradle/
+build/
+.kotlin/
+*.class
+
+.idea/
+*.iml
+.DS_Store
+
+.env
+.env.*
+!.env.example
+
+.scannerwork/
