@@ -1,0 +1,24 @@
+allprojects {
+    afterEvaluate { p ->
+        if (p.plugins.hasPlugin('org.jetbrains.kotlin.jvm')) {
+            p.tasks.register('ideSyncSources') {
+                doLast {
+                    def ids = p.configurations.compileClasspath.incoming.resolutionResult.allComponents*.id
+                        .findAll { it instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier }
+                    def result = p.dependencies.createArtifactResolutionQuery().forComponents(ids)
+                        .withArtifacts(JvmLibrary, SourcesArtifact).execute()
+                    int resolved = 0
+                    result.resolvedComponents.each { component ->
+                        component.getArtifacts(SourcesArtifact).each { artifact ->
+                            if (artifact instanceof org.gradle.api.artifacts.result.ResolvedArtifactResult) {
+                                artifact.file
+                                resolved++
+                            }
+                        }
+                    }
+                    println "ide-sync: ${resolved} archivos de fuentes resueltos sin violar la verificación"
+                }
+            }
+        }
+    }
+}

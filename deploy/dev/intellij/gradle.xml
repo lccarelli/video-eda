@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/services" />
+        <!-- El Gradle del IDE corre con Corretto 25, el JDK del proyecto (.sdkmanrc). Gradle toma el JDK 21 de detekt por toolchain. -->
+        <option name="gradleJvm" value="corretto-25" />
+        <!-- Compilar y probar con Gradle, no con el compilador interno de IntelliJ: ese soporta Kotlin hasta 2.4.0 y el proyecto usa 2.4.21. -->
+        <option name="delegatedBuild" value="true" />
+        <option name="testRunner" value="GRADLE" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/services" />
+            <option value="$PROJECT_DIR$/services/videos" />
+          </set>
+        </option>
+        <option name="resolveExternalAnnotations" value="true" />
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>
