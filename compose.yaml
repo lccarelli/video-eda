@@ -73,7 +73,11 @@ services:
     ports:
       - "9292:9292"
     environment:
-      PACT_BROKER_DATABASE_URL: postgres://videoeda:${POSTGRES_PASSWORD:-videoeda}@postgres:5432/pact_broker
+      PACT_BROKER_DATABASE_ADAPTER: postgres
+      PACT_BROKER_DATABASE_HOST: postgres
+      PACT_BROKER_DATABASE_NAME: pact_broker
+      PACT_BROKER_DATABASE_USERNAME: videoeda
+      PACT_BROKER_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-videoeda}
       PACT_BROKER_LOG_LEVEL: INFO
       PACT_BROKER_BASE_URL: http://localhost:9292
 
