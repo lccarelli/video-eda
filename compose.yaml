@@ -53,7 +53,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: videoeda
-      POSTGRES_PASSWORD: videoeda
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-videoeda}
       POSTGRES_DB: postgres
     volumes:
       - postgres-data:/var/lib/postgresql
@@ -73,7 +73,7 @@ services:
     ports:
       - "9292:9292"
     environment:
-      PACT_BROKER_DATABASE_URL: postgres://videoeda:videoeda@postgres:5432/pact_broker
+      PACT_BROKER_DATABASE_URL: postgres://videoeda:${POSTGRES_PASSWORD:-videoeda}@postgres:5432/pact_broker
       PACT_BROKER_LOG_LEVEL: INFO
       PACT_BROKER_BASE_URL: http://localhost:9292
 
@@ -216,7 +216,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/videos
       SPRING_DATASOURCE_USERNAME: videoeda
-      SPRING_DATASOURCE_PASSWORD: videoeda
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-videoeda}
       VIDEOS_KAFKA_BOOTSTRAP_SERVERS: kafka:19092
       VIDEOS_SECURITY_JWK_SET_URI: http://keycloak:8080/realms/video-eda/protocol/openid-connect/certs
     healthcheck:

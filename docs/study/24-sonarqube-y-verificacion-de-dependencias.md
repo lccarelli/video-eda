@@ -104,5 +104,6 @@ Tras el arreglo de las fuentes, IntelliJ siguió fallando (el log de IDEA mostra
 | Fecha | Cambio |
 |---|---|
 | 2026-10-17 | Creación: SonarQube en el perfil `quality`, `sonar.sh`, plugin Gradle, `sonarcloud.yml` opcional, verificación SHA-256 de dependencias |
+| 2026-10-30 | SonarCloud activo: `sonarcloud.yml` analiza todo el repositorio con `sonarqube-scan-action` v8.3.0 y `sonar-project.properties` (sin `spikes/`; `yaml:S6418` ignorada en los payloads de ejemplo de AsyncAPI), con `sonar.qualitygate.wait=true`. El primer análisis automático marcó 30 hallazgos: contraseñas de desarrollo fijas (pasaron a `${POSTGRES_PASSWORD:-videoeda}`), spikes sin lockfile y `[` en vez de `[[` en los scripts |
 | 2026-10-18 | La verificación de dependencias bloqueaba la sincronización de IntelliJ (fuentes sin checksum): se confía en `-sources.jar`, `-javadoc.jar` y `gradle-*-src.zip`; `lint.sh` simula la sincronización del IDE |
 | 2026-10-18 | Metadatos incompletos (generados con caché caliente): regenerados con caché vacía, script corregido, confianza en metadatos `.pom`/`.module` de Kotlin; comprobado con `GRADLE_USER_HOME` vacío |

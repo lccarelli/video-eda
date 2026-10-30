@@ -15,7 +15,7 @@ if grep -nE '^\s*(//|/\*|\*/|\* )|[^:"]\s//\s' "${kotlin_files[@]}" /dev/null; t
 
 if grep -nE '^\s*#([^!]|$)|\S\s+#\s' "${config_files[@]}" /dev/null | grep -vE '#\s*v[0-9]'; then found=1; fi
 
-if [ "$found" -eq 1 ]; then
+if [[ "$found" -eq 1 ]]; then
   echo "Hay comentarios en el código: el código se lee solo; el porqué va en un ADR, una nota o un nombre." >&2
   exit 1
 fi

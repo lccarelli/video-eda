@@ -6,7 +6,7 @@ cd "$(git rev-parse --show-toplevel)"
 target_dir="${IDEA_DIR:-.idea}"
 sdk_name="corretto-25"
 
-if [ "${1:-}" != "--force" ] && pgrep -f "IntelliJ IDEA" >/dev/null 2>&1; then
+if [[ "${1:-}" != "--force" ]] && pgrep -f "IntelliJ IDEA" >/dev/null 2>&1; then
   echo "IntelliJ está abierto: cerralo y volvé a correr esto (o usá --force)." >&2
   exit 1
 fi
@@ -18,7 +18,7 @@ if ! grep -rqs "<name value=\"$sdk_name\"" "$HOME"/Library/Application\ Support/
 fi
 
 mkdir -p "$target_dir"
-if [ -f "$target_dir/gradle.xml" ]; then
+if [[ -f "$target_dir/gradle.xml" ]]; then
   cp "$target_dir/gradle.xml" "$target_dir/gradle.xml.bak"
   echo "Copia de seguridad: $target_dir/gradle.xml.bak"
 fi

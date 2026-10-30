@@ -143,12 +143,12 @@ Con una base nueva (o con `docker compose down -v`) no hace falta.
 ### Configuración del stack
 - **Puertos:** Grafana (3000), Keycloak (8180) y SonarQube (9000) se publican solo en `127.0.0.1`; Loki, Alloy y el proxy del socket de Docker no se publican.
 - **Kafka:** `localhost:9092` es el listener `EXTERNAL` para herramientas en tu máquina; entre contenedores se usa `kafka:19092` (`INTERNAL`). Un solo nodo con factor de replicación 1; el objetivo documentado para producción es 3 (ADR 0008).
-- **Contraseñas de ejemplo** (solo para tu máquina): se pueden cambiar con las variables `GRAFANA_ADMIN_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD` y `SONAR_ADMIN_PASSWORD`.
+- **Contraseñas de ejemplo** (solo para tu máquina): se pueden cambiar con las variables `POSTGRES_PASSWORD`, `GRAFANA_ADMIN_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD` y `SONAR_ADMIN_PASSWORD`.
 - **Healthchecks con `bash`:** las imágenes de Videos y Keycloak no traen `curl`, así que se consulta `/actuator/health` y `/health/ready` con `bash` y `/dev/tcp`; con `sh` no funcionaría. La imagen de Loki no trae shell y no tiene healthcheck.
 - **SonarQube en Docker Desktop:** el contenedor desactiva los chequeos de arranque de Elasticsearch (`SONAR_ES_BOOTSTRAP_CHECKS_DISABLE`) porque Docker Desktop no garantiza `vm.max_map_count`; es solo para desarrollo local.
 
-### SonarCloud (opcional)
-El workflow `sonarcloud.yml` no hace nada hasta que lo actives en GitHub: creá el proyecto en sonarcloud.io, guardá el secreto `SONAR_TOKEN` y creá las variables del repositorio `SONARCLOUD_ENABLED=true`, `SONAR_ORGANIZATION` y `SONAR_PROJECT_KEY`.
+### SonarCloud
+El workflow `sonarcloud.yml` corre en cada push a `main` y en cada pull request: tests con cobertura, análisis de todo el repositorio (`sonar-project.properties`, sin `spikes/`) y falla si el quality gate no pasa. Necesita el secreto `SONAR_TOKEN` y el *Automatic Analysis* apagado en SonarCloud.
 
 ### Apple Silicon y `DOCKER_DEFAULT_PLATFORM`
 Si tu shell exporta `DOCKER_DEFAULT_PLATFORM=linux/amd64`, Docker corre todo emulado en amd64: es más lento y **SonarQube no arranca** (Elasticsearch falla con `seccomp unavailable`). Para este proyecto, `unset DOCKER_DEFAULT_PLATFORM` antes de `docker compose up`; los scripts de `deploy/dev/sonar.sh` ya lo hacen por su cuenta.

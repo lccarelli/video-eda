@@ -31,7 +31,7 @@ scripts=()
 while IFS= read -r script; do scripts+=("$script"); done < <(find deploy .githooks -type f \( -name '*.sh' -o -name 'pre-commit' \))
 docker run --rm -v "$PWD:/mnt" -w /mnt "$SHELLCHECK_IMAGE" "${scripts[@]}"
 
-if [ -d .github/workflows ]; then
+if [[ -d .github/workflows ]]; then
   echo ">> Workflows de GitHub Actions: actionlint (sintaxis) y zizmor (seguridad)"
   docker run --rm -v "$PWD:/repo" -w /repo "$ACTIONLINT_IMAGE" -color
   docker run --rm -v "$PWD:/repo" -w /repo "$ZIZMOR_IMAGE" --no-online-audits --min-severity low .github

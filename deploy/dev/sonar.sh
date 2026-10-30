@@ -10,7 +10,7 @@ TOKEN_NAME="analisis-local"
 
 unset DOCKER_DEFAULT_PLATFORM
 
-if [ "${1:-}" = "--down" ]; then
+if [[ "${1:-}" = "--down" ]]; then
   docker compose --profile quality stop sonarqube
   exit 0
 fi
@@ -43,7 +43,7 @@ curl -s -o /dev/null -u "admin:$ADMIN_PASSWORD" -X POST "$SONAR_URL/api/projects
 
 curl -s -o /dev/null -u "admin:$ADMIN_PASSWORD" -X POST "$SONAR_URL/api/user_tokens/revoke" -d "name=$TOKEN_NAME" || true
 token="$(curl -sf -u "admin:$ADMIN_PASSWORD" -X POST "$SONAR_URL/api/user_tokens/generate" -d "name=$TOKEN_NAME" | json_field token)"
-[ -n "$token" ] || fail "no pude generar el token de análisis"
+[[ -n "$token" ]] || fail "no pude generar el token de análisis"
 
 echo ">> Tests, cobertura y análisis (puede tardar unos minutos)"
 (cd services && SONAR_TOKEN="$token" ./gradlew check sonar \
@@ -61,6 +61,6 @@ measures="$(curl -sf -u "admin:$ADMIN_PASSWORD" \
 echo "$measures" | sed 's/},{/}\n{/g' | sed -n 's/.*"metric":"\([^"]*\)","value":"\([^"]*\)".*/   \1 = \2/p'
 echo ">> Detalle: $SONAR_URL/dashboard?id=$PROJECT_KEY"
 
-[ "${gradle_failed:-0}" = "0" ] || fail "Gradle terminó con error (ver arriba)"
-[ "$status" = "OK" ] || fail "el quality gate no está en OK"
+[[ "${gradle_failed:-0}" = "0" ]] || fail "Gradle terminó con error (ver arriba)"
+[[ "$status" = "OK" ]] || fail "el quality gate no está en OK"
 echo ">> OK"
