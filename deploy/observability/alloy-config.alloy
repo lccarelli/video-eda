@@ -1,5 +1,6 @@
 discovery.docker "proyecto" {
-  host = "tcp://docker-socket-proxy:2375"
+  host             = "tcp://docker-socket-proxy:2375"
+  refresh_interval = "5s"
 
   filter {
     name   = "label"

@@ -53,7 +53,7 @@ done
 echo ">> Buscando el flujo en Loki (vía Grafana) por $CORRELATION_ID"
 query="$(printf '{service=~".+"} |= "%s"' "$CORRELATION_ID" | od -An -tx1 | tr -d ' \n' | sed 's/../%&/g')"
 lines=0
-for _ in $(seq 1 30); do
+for _ in $(seq 1 60); do
   body="$(curl -sf -u "$GRAFANA_USER:$GRAFANA_PASSWORD" \
     "$GRAFANA/api/datasources/proxy/uid/loki/loki/api/v1/query_range?query=$query&limit=100&since=15m" || true)"
   lines="$(echo "$body" | grep -o "$CORRELATION_ID" | wc -l | tr -d ' ')" || true

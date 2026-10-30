@@ -41,6 +41,9 @@ dependencies {
         implementation("org.apache.tomcat.embed:tomcat-embed-websocket:11.0.27") {
             because("va con la misma versión que tomcat-embed-core")
         }
+        implementation("org.xerial.snappy:snappy-java:1.1.10.12") {
+            because("snappy-java 1.1.10.7, que trae kafka-clients, tiene CVE-2026-108106 y CVE-2026-93451")
+        }
         implementation("at.yawk.lz4:lz4-java:1.11.4") {
             because("lz4-java 1.10.2, que trae kafka-clients, tiene CVE-2026-106451")
         }
