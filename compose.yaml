@@ -135,7 +135,7 @@ services:
       - docker-api
 
   grafana:
-    image: grafana/grafana:13.2.4
+    image: grafana/grafana:13.3.0
     container_name: grafana
     depends_on:
       loki:
