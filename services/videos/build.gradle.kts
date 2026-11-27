@@ -24,38 +24,38 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
-    implementation(platform("tools.jackson:jackson-bom:3.1.8")) {
+    implementation(platform("tools.jackson:jackson-bom:3.2.4")) {
         because(
             "jackson-core y jackson-databind 3.1.5 tienen CVE-2026-89407, -89425, -68497, -91776 y -91777; quitar cuando Spring Boot incluya 3.1.7 o posterior",
         )
     }
     constraints {
-        implementation("org.apache.tomcat.embed:tomcat-embed-core:11.0.27") {
+        implementation("org.apache.tomcat.embed:tomcat-embed-core:11.0.29") {
             because(
                 "tomcat-embed-core 11.0.24 tiene CVE-2026-65182, -65905 y -68525 (críticos); quitar cuando Spring Boot incluya 11.0.25 o posterior",
             )
         }
-        implementation("org.apache.tomcat.embed:tomcat-embed-el:11.0.27") {
+        implementation("org.apache.tomcat.embed:tomcat-embed-el:11.0.29") {
             because("va con la misma versión que tomcat-embed-core")
         }
-        implementation("org.apache.tomcat.embed:tomcat-embed-websocket:11.0.27") {
+        implementation("org.apache.tomcat.embed:tomcat-embed-websocket:11.0.29") {
             because("va con la misma versión que tomcat-embed-core")
         }
         implementation("org.xerial.snappy:snappy-java:1.1.10.12") {
             because("snappy-java 1.1.10.7, que trae kafka-clients, tiene CVE-2026-108106 y CVE-2026-93451")
         }
-        implementation("at.yawk.lz4:lz4-java:1.11.4") {
+        implementation("at.yawk.lz4:lz4-java:1.14.1") {
             because("lz4-java 1.10.2, que trae kafka-clients, tiene CVE-2026-106451")
         }
     }
-    implementation("org.apache.kafka:kafka-clients:4.3.1")
+    implementation("org.apache.kafka:kafka-clients:4.4.0")
     implementation("tools.jackson.core:jackson-databind")
     implementation("tools.jackson.module:jackson-module-kotlin")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
 
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.3")
-    testImplementation("com.networknt:json-schema-validator:3.0.8")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.4")
+    testImplementation("com.networknt:json-schema-validator:3.0.9")
 
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-security-test")
