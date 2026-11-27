@@ -82,7 +82,7 @@ services:
       PACT_BROKER_BASE_URL: http://localhost:9292
 
   kafka-ui:
-    image: ghcr.io/kafbat/kafka-ui:v1.5.0
+    image: ghcr.io/kafbat/kafka-ui:v1.5.1
     container_name: kafka-ui
     depends_on:
       kafka:
